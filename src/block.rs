@@ -41,9 +41,12 @@ impl Block {
 
   fn run_proof_of_work(&mut self) -> Result<()> {
     info!("Mining the block");
+    let mut iter = 0;
     while !self.validate()? {
+      iter += 1;
       self.nonce += 1;
     }
+    println!("total iteration: {}", iter);
     let data = self.prepare_hash_data()?;
     let mut hasher = Sha256::new();
     hasher.input(&data[..]);
@@ -58,7 +61,7 @@ impl Block {
     hasher.input(&data[..]);
     let mut vec1 = vec![];
     vec1.resize(TARGET_HEXT, '0' as u8);
-    println!("{:?}", vec1);
+    // println!("vec1 {:?}", vec1);
 
     Ok(&hasher.result_str()[0..TARGET_HEXT] == String::from_utf8(vec1)?)
   }
@@ -96,5 +99,20 @@ impl Blockchain {
     let new_block = Block::new_block(data, prev.get_hash(), TARGET_HEXT)?;
     self.blocks.push(new_block);
     Ok(())
+  }
+}
+
+#[cfg(test)]
+
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_blockchain() {
+    let mut b = Blockchain::new();
+    b.add_block("data".to_string());
+    // b.add_block("data2".to_string());
+    // b.add_block("data23".to_string());
+    dbg!(b);
   }
 }

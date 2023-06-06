@@ -1,5 +1,5 @@
 mod block;
 
 fn main() {
-  println!("{}", 'O' as u8);
+  println!("Hello, World!\n{}", 'O' as u8);
 }
