@@ -2,17 +2,18 @@ use crate::{blockchain::Blockchain, errors::Result};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use log::info;
+use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
 const TARGET_HEXT: usize = 4;
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Block {
   timestamp: u128,
   transactions: String,
-  pub prev_block_hash: String,
+  prev_block_hash: String,
   hash: String,
-  pub height: usize,
+  height: usize,
   nonce: i32,
 }
 
@@ -41,7 +42,6 @@ impl Block {
       iter += 1;
       self.nonce += 1;
     }
-    println!("total iteration: {}", iter);
     let data = self.prepare_hash_data()?;
     let mut hasher = Sha256::new();
     hasher.input(&data[..]);
@@ -56,7 +56,6 @@ impl Block {
     hasher.input(&data[..]);
     let mut vec1 = vec![];
     vec1.resize(TARGET_HEXT, '0' as u8);
-    // println!("vec1 {:?}", vec1);
 
     Ok(&hasher.result_str()[0..TARGET_HEXT] == String::from_utf8(vec1)?)
   }
@@ -77,8 +76,21 @@ impl Block {
     self.hash.clone()
   }
 
+  pub fn get_prev_hash(&self) -> String {
+    self.prev_block_hash.clone()
+  }
+
+  pub fn get_height(&self) -> usize {
+    self.height.clone()
+  }
+
   pub fn new_genesis_block() -> Block {
-    Block::new_block(String::new(), String::new(), 0).unwrap()
+    Block::new_block(
+      String::from("genesis block"),
+      String::from("0000000000000000000000000000000000000000000000000000000000000001"),
+      0,
+    )
+    .unwrap()
   }
 }
 
@@ -96,6 +108,6 @@ mod tests {
     b.add_block("data2".to_string());
     b.add_block("data23".to_string());
     remove_dir_all(crate::BLOCKCHAIN_DATA_PATH);
-    dbg!(b);
+    dbg!(b.get_data());
   }
 }
