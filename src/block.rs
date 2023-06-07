@@ -1,24 +1,19 @@
+use crate::{blockchain::Blockchain, errors::Result};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use log::info;
 use std::time::SystemTime;
 
-pub type Result<T> = std::result::Result<T, failure::Error>;
-
 const TARGET_HEXT: usize = 4;
-#[derive(Debug, Clone)]
-struct Block {
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct Block {
   timestamp: u128,
   transactions: String,
-  prev_block_hash: String,
+  pub prev_block_hash: String,
   hash: String,
-  height: usize,
+  pub height: usize,
   nonce: i32,
-}
-
-#[derive(Debug)]
-pub struct Blockchain {
-  blocks: Vec<Block>,
 }
 
 impl Block {
@@ -78,7 +73,7 @@ impl Block {
     Ok(bytes)
   }
 
-  fn get_hash(&self) -> String {
+  pub fn get_hash(&self) -> String {
     self.hash.clone()
   }
 
@@ -87,32 +82,20 @@ impl Block {
   }
 }
 
-impl Blockchain {
-  pub fn new() -> Blockchain {
-    Blockchain {
-      blocks: vec![Block::new_genesis_block()],
-    }
-  }
-
-  pub fn add_block(&mut self, data: String) -> Result<()> {
-    let prev = self.blocks.last().unwrap();
-    let new_block = Block::new_block(data, prev.get_hash(), TARGET_HEXT)?;
-    self.blocks.push(new_block);
-    Ok(())
-  }
-}
-
 #[cfg(test)]
 
 mod tests {
   use super::*;
+  use std::fs::remove_dir_all;
 
   #[test]
   fn test_blockchain() {
-    let mut b = Blockchain::new();
+    remove_dir_all(crate::BLOCKCHAIN_DATA_PATH);
+    let mut b = Blockchain::new().unwrap();
     b.add_block("data".to_string());
-    // b.add_block("data2".to_string());
-    // b.add_block("data23".to_string());
+    b.add_block("data2".to_string());
+    b.add_block("data23".to_string());
+    remove_dir_all(crate::BLOCKCHAIN_DATA_PATH);
     dbg!(b);
   }
 }
