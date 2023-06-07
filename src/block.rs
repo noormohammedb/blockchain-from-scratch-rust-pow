@@ -95,19 +95,23 @@ impl Block {
 }
 
 #[cfg(test)]
-
 mod tests {
   use super::*;
   use std::fs::remove_dir_all;
 
   #[test]
   fn test_blockchain() {
-    remove_dir_all(crate::BLOCKCHAIN_DATA_PATH);
+    // remove_dir_all(crate::BLOCKCHAIN_DATA_PATH);
     let mut b = Blockchain::new().unwrap();
     b.add_block("data".to_string());
     b.add_block("data2".to_string());
     b.add_block("data23".to_string());
-    remove_dir_all(crate::BLOCKCHAIN_DATA_PATH);
+    // remove_dir_all(crate::BLOCKCHAIN_DATA_PATH);
+
     dbg!(b.get_data());
+
+    // for block in b.iter() {
+    //   dbg!(block);
+    // }
   }
 }

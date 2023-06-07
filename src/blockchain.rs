@@ -6,16 +6,31 @@ pub struct Blockchain {
   current_hash: String,
   db: sled::Db,
 }
+pub struct BlockchainIter {
+  current_hash: String,
+  bc: Blockchain,
+}
 
 impl Blockchain {
   pub fn new() -> Result<Blockchain> {
     let db = sled::open(BLOCKCHAIN_DATA_PATH)?;
     match db.get("LAST")? {
-      Some(hash) => {
-        let last_hash = String::from_utf8(hash.to_vec())?;
-        Ok(Blockchain {
+      Some(last_block_blob) => {
+        let last_block = bincode::deserialize::<Block>(&last_block_blob)?;
+        let mut chain_with_db_ref = Blockchain {
           blocks: Vec::new(),
-          current_hash: last_hash,
+          current_hash: last_block.get_hash(),
+          db: db.clone(),
+        };
+
+        let mut blocks = vec![];
+        for block in chain_with_db_ref.iter() {
+          blocks.insert(0, block);
+        }
+
+        Ok(Blockchain {
+          blocks: blocks,
+          current_hash: last_block.get_hash(),
           db,
         })
       }
@@ -57,5 +72,50 @@ impl Blockchain {
     (&self.blocks, &self.current_hash)
   }
 
+  pub fn iter(&self) -> BlockchainIter {
+    BlockchainIter {
+      current_hash: self.current_hash.clone(),
+      bc: self.clone(),
     }
+  }
+}
+
+impl Iterator for BlockchainIter {
+  type Item = Block;
+  fn next(&mut self) -> Option<Self::Item> {
+    if let Ok(encoded_block) = self.bc.db.get(&self.current_hash) {
+      match encoded_block {
+        Some(block_byte) => {
+          if let Ok(block) = bincode::deserialize::<Block>(&block_byte) {
+            self.current_hash = block.get_prev_hash();
+            return Some(block);
+          } else {
+            return None;
+          }
+        }
+        None => None,
+      }
+    } else {
+      None
+    }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_add_block() {
+    let mut b = Blockchain::new().unwrap();
+    b.add_block("data 1".to_string());
+    b.add_block("data 2".to_string());
+    b.add_block("data 3".to_string());
+
+    dbg!(b.get_data());
+
+    // for block in b.iter() {
+    //   dbg!(block);
+    // }
+  }
 }
