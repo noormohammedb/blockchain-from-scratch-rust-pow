@@ -1,4 +1,4 @@
-use crate::{blockchain::Blockchain, errors::Result};
+use crate::{Blockchain, Result};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use log::info;

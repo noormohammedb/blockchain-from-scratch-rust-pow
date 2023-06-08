@@ -1,4 +1,4 @@
-use crate::{block::Block, errors::Result, BLOCKCHAIN_DATA_PATH};
+use crate::{Block, Result, BLOCKCHAIN_DATA_PATH};
 
 #[derive(Debug, Clone)]
 pub struct Blockchain {
