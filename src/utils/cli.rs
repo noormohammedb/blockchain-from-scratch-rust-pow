@@ -31,12 +31,10 @@ impl Cli {
       if let Some(c) = matches.get_one::<String>("DATA") {
         self.bc.add_block(c.clone())?;
       }
-    } else {
-      println!("Not printing")
-    }
-
-    if let Some(_) = matches.subcommand_matches("printchain") {
+    } else if let Some(_) = matches.subcommand_matches("printchain") {
       self.print_chain();
+    } else {
+      println!("command not found");
     }
 
     Ok(())
@@ -47,7 +45,7 @@ impl Cli {
   }
 
   fn print_chain(&mut self) {
-    for b in &mut self.bc.iter() {
+    for b in &mut self.bc.iter().rev() {
       println!("block: {:#?}", b);
     }
   }
