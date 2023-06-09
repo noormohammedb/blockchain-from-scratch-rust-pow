@@ -29,7 +29,8 @@ impl Cli {
 
     if let Some(matches) = matches.subcommand_matches("addblock") {
       if let Some(c) = matches.get_one::<String>("DATA") {
-        self.bc.add_block(c.clone())?;
+        // self.bc.add_block(c.clone())?;
+        self.bc.add_block(vec![])?;
       }
     } else if let Some(_) = matches.subcommand_matches("printchain") {
       self.print_chain();
@@ -40,7 +41,7 @@ impl Cli {
     Ok(())
   }
 
-  fn addblock(&mut self, data: String) -> Result<()> {
+  fn addblock(&mut self, data: Vec<super::Transaction>) -> Result<()> {
     self.bc.add_block(data)
   }
 
