@@ -1,3 +1,4 @@
+use sled::{self, Db};
 use std::collections::HashMap;
 
 use log::info;
@@ -19,13 +20,13 @@ pub struct BlockchainIter {
 }
 
 impl Blockchain {
-  pub fn create_blockchain(address: String) -> Result<Blockchain> {
+  pub fn create_blockchain(db: Db, address: String) -> Result<Blockchain> {
     info!("Creating new block database");
-    let db = sled::open(BLOCKCHAIN_DATA_PATH)?;
+    // let db = sled::open(BLOCKCHAIN_DATA_PATH)?;
     let cbtx = Transaction::new_coinbase(address, String::from("Genesis transaction"))?;
     let genesis: Block = Block::new_genesis_block(cbtx);
     let genesis_hash = genesis.get_hash();
-    db.insert(&genesis_hash, bincode::serialize(&genesis)?);
+    db.insert(&genesis_hash, bincode::serialize(&genesis)?)?;
     db.insert("LAST", bincode::serialize(&genesis_hash)?)?;
     db.insert("FIRST", bincode::serialize(&genesis_hash)?)?; // for genesis block
     let bc = Blockchain {
@@ -33,17 +34,22 @@ impl Blockchain {
       blocks: vec![genesis],
       db,
     };
+
     bc.db.flush()?;
 
     Ok(bc)
   }
   pub fn new() -> Result<Blockchain> {
     info!("open blockchain");
-    let db = sled::open(BLOCKCHAIN_DATA_PATH)?;
-    let hash = db
-      .get("LAST")?
-      .expect("Must create a new block database first");
-    let last_hash = String::from_utf8(hash.to_vec())?;
+
+    let mut db = sled::open(BLOCKCHAIN_DATA_PATH)?;
+
+    if !db.was_recovered() {
+      println!("creating new blockchain with genesis block");
+      db = Self::create_blockchain(db.clone(), "0".to_owned())?.db;
+    }
+    let hash = db.get("LAST")?;
+    let last_hash = String::from_utf8(hash.unwrap_or_default().to_vec())?;
     let mut blockchain_with_db_ref = Blockchain {
       blocks: vec![],
       current_hash: last_hash,

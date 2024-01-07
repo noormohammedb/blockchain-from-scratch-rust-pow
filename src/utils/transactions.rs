@@ -27,7 +27,7 @@ impl Transaction {
     if data == String::from("") {
       data += &format!("Reward to '{}'", to);
     }
-    let mut tx = Transaction {
+    let mut cbtx = Transaction {
       id: String::new(),
       vin: vec![TXInput {
         txid: String::new(),
@@ -40,7 +40,8 @@ impl Transaction {
       }],
     };
 
-    Err(failure::err_msg("lorem"))
+    Ok(cbtx)
+    // Err(failure::err_msg("lorem"))
   }
 
   fn set_id(&mut self) -> Result<()> {
